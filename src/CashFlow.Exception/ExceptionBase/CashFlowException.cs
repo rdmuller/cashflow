@@ -6,7 +6,7 @@ public abstract class CashFlowException : SystemException
 
     }
 
-    public abstract int statusCode { get; }
+    public abstract int StatusCode { get; }
 
     public abstract List<string> GetErrors();
 }

@@ -1,7 +1,6 @@
-﻿using CashFlow.Communication.Enums;
-using CashFlow.Communication.Requests;
-using FluentValidation;
+﻿using CashFlow.Communication.Requests;
 using CashFlow.Exception;
+using FluentValidation;
 
 namespace CashFlow.Application.UseCases.Expenses;
 public class ExpenseValidator : AbstractValidator<RequestExpenseJson>

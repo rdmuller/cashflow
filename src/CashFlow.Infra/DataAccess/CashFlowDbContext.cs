@@ -8,6 +8,8 @@ internal class CashFlowDbContext : DbContext
 
     public DbSet<Expense> Expenses { get; set; }
 
+    public DbSet<User> Users { get; set; }
+
    /* protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         var connectionString = "Server=localhost;Database=cashflow;Uid=root;Pwd=docker";
