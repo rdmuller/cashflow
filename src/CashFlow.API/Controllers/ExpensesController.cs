@@ -5,12 +5,14 @@ using CashFlow.Application.UseCases.Expenses.Register;
 using CashFlow.Application.UseCases.Expenses.Update;
 using CashFlow.Communication.Requests;
 using CashFlow.Communication.Responses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CashFlow.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize] // também pode ser informado por rota
 public class ExpensesController : ControllerBase
 {
     [HttpPost]

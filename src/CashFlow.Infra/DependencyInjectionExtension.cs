@@ -3,9 +3,12 @@ using CashFlow.Domain.Repositories.Expenses;
 using CashFlow.Domain.Repositories.User;
 using CashFlow.Domain.Security.Cryptografy;
 using CashFlow.Domain.Security.Tokens;
+using CashFlow.Domain.Services.LoggedUser;
 using CashFlow.Infra.DataAccess;
 using CashFlow.Infra.DataAccess.Repositories;
+using CashFlow.Infra.Extensions;
 using CashFlow.Infra.Security.Tokens;
+using CashFlow.Infra.Services.LoggedUser;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,11 +18,16 @@ public static class DependencyInjectionExtension
 {
     public static void AddInfra(this IServiceCollection services, IConfiguration configuration)
     {
-        AddDbContext(services, configuration);
+        services.AddScoped<IPasswordEncryptor, Security.Cryptography.BCrypt>();
+        services.AddScoped<ILoggedUser, LoggedUser>();
+
         AddRepositories(services);
         AddToken(services, configuration);
 
-        services.AddScoped<IPasswordEncryptor, Security.Cryptography.BCrypt>();
+        if (!configuration.IsTestEnvironment())
+        {
+            AddDbContext(services, configuration);
+        }
     }
 
     public static void AddRepositories(IServiceCollection services)
@@ -35,7 +43,7 @@ public static class DependencyInjectionExtension
     public static void AddDbContext(IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("Connection");  // para ler do appsettings "Server=localhost;Database=cashflow;Uid=root;Pwd=docker";
-        var serverVersion = new MySqlServerVersion(new Version(8, 1, 0));
+        var serverVersion = ServerVersion.AutoDetect(connectionString);
 
         services.AddDbContext<CashFlowDbContext>(config => config.UseMySql(connectionString, serverVersion));
     }

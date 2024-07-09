@@ -4,6 +4,7 @@ using CashFlow.Application.UseCases.Expenses.Reports.Pdf.Fonts;
 using CashFlow.Domain.Extensions;
 using CashFlow.Domain.Reports;
 using CashFlow.Domain.Repositories.Expenses;
+using CashFlow.Domain.Services.LoggedUser;
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Tables;
 using MigraDoc.Rendering;
@@ -14,26 +15,30 @@ namespace CashFlow.Application.UseCases.Expenses.Reports.Pdf;
 public class GenerateExpensesReportPdfUseCase : IGenerateExpensesReportPdfUseCase
 {
     private readonly IExpensesReadOnlyRepository _repository;
+    private readonly ILoggedUser _loggedUser;
+
     private const string CURRENCY_SYMBOL = "R$";
     private const int HEIGHT_ROW_EXPENSE_TABLE = 25;
 
-    public GenerateExpensesReportPdfUseCase(IExpensesReadOnlyRepository repository)
+    public GenerateExpensesReportPdfUseCase(IExpensesReadOnlyRepository repository, ILoggedUser loggedUser)
     {
         _repository = repository;
+        _loggedUser = loggedUser;
 
         GlobalFontSettings.FontResolver = new ExpensesReportFontResolver();
     }
 
     public async Task<byte[]> Execute(DateOnly month)
     {
-        var expenses = await _repository.FilterByMonth(month);
+        var loggedUser = await _loggedUser.Get();
+        var expenses = await _repository.FilterByMonth(loggedUser, month);
         if (expenses.Count == 0)
             return [];
 
-        var document = CreateDocument(month);
+        var document = CreateDocument(loggedUser.Name, month);
         var page = CreatePage(document);
 
-        CreateHeaderWithProfilePhotoAndName(page);
+        CreateHeaderWithProfilePhotoAndName(loggedUser.Name, page);
 
         var totalExpenses = expenses.Sum(e => e.Amount);
         CreateTotalSpentSection(page, month, totalExpenses);
@@ -82,12 +87,12 @@ public class GenerateExpensesReportPdfUseCase : IGenerateExpensesReportPdfUseCas
         return RenderDocument(document);
     }
 
-    private Document CreateDocument(DateOnly month)
+    private Document CreateDocument(string author, DateOnly month)
     {
         var document = new Document();
         //document.Info.Title = $"{ResourceReportGenerationMessages.EXPENSES_FOR} {month.ToString("Y")}";
         document.Info.Title = $"{ResourceReportGenerationMessages.EXPENSES_FOR} {month:Y}";
-        document.Info.Author = "Ronald Müller";
+        document.Info.Author = author;
 
         var style = document.Styles["Normal"];
         style!.Font.Name = FontHelper.RALEWAY_REGULAR;
@@ -109,7 +114,7 @@ public class GenerateExpensesReportPdfUseCase : IGenerateExpensesReportPdfUseCas
         return section;
     }
 
-    private void CreateHeaderWithProfilePhotoAndName(Section page)
+    private void CreateHeaderWithProfilePhotoAndName(string name, Section page)
     {
         var table = page.AddTable();
         table.AddColumn();
@@ -121,7 +126,7 @@ public class GenerateExpensesReportPdfUseCase : IGenerateExpensesReportPdfUseCas
         var directoryName = Path.GetDirectoryName(assembly.Location);
         row.Cells[0].AddImage(Path.Combine(directoryName!, "logo", "Fotoperfil2.png"));
 
-        row.Cells[1].AddParagraph("Hey, Ronald Müller");
+        row.Cells[1].AddParagraph($"Hey, {name}");
         row.Cells[1].Format.Font = new Font { Name = FontHelper.RALEWAY_BLACK, Size = 16 };
         row.Cells[1].VerticalAlignment = MigraDoc.DocumentObjectModel.Tables.VerticalAlignment.Center;
     }
@@ -137,7 +142,7 @@ public class GenerateExpensesReportPdfUseCase : IGenerateExpensesReportPdfUseCas
         paragraph.AddFormattedText(title, new Font { Name = FontHelper.RALEWAY_REGULAR, Size = 15 });
         paragraph.AddLineBreak();
 
-        paragraph.AddFormattedText($"{CURRENCY_SYMBOL} {totalExpenses}", new Font { Name = FontHelper.WORKSANS_BLACK, Size = 50 });
+        paragraph.AddFormattedText($"{CURRENCY_SYMBOL} {Math.Round(totalExpenses,2)}", new Font { Name = FontHelper.WORKSANS_BLACK, Size = 50 });
     }
 
     private Table CreateExpenseTable(Section page)
@@ -179,7 +184,7 @@ public class GenerateExpensesReportPdfUseCase : IGenerateExpensesReportPdfUseCas
 
     private void AddAmountForExpense(Cell cell, decimal amount)
     {
-        cell.AddParagraph($"{CURRENCY_SYMBOL} -{amount.ToString()}");
+        cell.AddParagraph($"{CURRENCY_SYMBOL} -{amount:f2}");
         cell.Format.Font = new Font { Name = FontHelper.WORKSANS_REGULAR, Size = 14, Color = ColorsHelper.BLACK };
         cell.Shading.Color = ColorsHelper.WHITE;
         cell.VerticalAlignment = VerticalAlignment.Center;
