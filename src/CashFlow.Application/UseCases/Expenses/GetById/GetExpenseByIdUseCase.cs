@@ -16,6 +16,7 @@ public class GetExpenseByIdUseCase : IGetExpenseByIdUseCase
     {
         _repository = repository;
         _mapper = mapper;
+        _loggedUser = loggedUser;
     }
 
     public async Task<ResponseExpenseJson> Execute(long id)

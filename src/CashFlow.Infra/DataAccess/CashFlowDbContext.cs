@@ -10,12 +10,19 @@ public class CashFlowDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
 
-   /* protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    /* protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+     {
+         var connectionString = "Server=localhost;Database=cashflow;Uid=root;Pwd=docker";
+
+         var serverVersion = new MySqlServerVersion(new Version(8, 1, 0));
+
+         optionsBuilder.UseMySql(connectionString, serverVersion);
+     }*/
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        var connectionString = "Server=localhost;Database=cashflow;Uid=root;Pwd=docker";
+        base.OnModelCreating(modelBuilder);
 
-        var serverVersion = new MySqlServerVersion(new Version(8, 1, 0));
-
-        optionsBuilder.UseMySql(connectionString, serverVersion);
-    }*/
+        modelBuilder.Entity<Tag>().ToTable("Tags");
+    }
 }

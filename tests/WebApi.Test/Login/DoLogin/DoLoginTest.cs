@@ -1,23 +1,20 @@
 ﻿using CashFlow.Communication.Requests;
 using FluentAssertions;
-using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace WebApi.Test.Login.DoLogin;
-public class DoLoginTest : IClassFixture<CustomWebApplicationFactory>
+public class DoLoginTest : CashFlowClassFixture
 {
     private const string METHOD = "api/login";
     private readonly string _email;
     private readonly string _name;
     private readonly string _password;
-    private readonly HttpClient _httpClient;
-
-    public DoLoginTest(CustomWebApplicationFactory webApplicationFactory)
+    
+    public DoLoginTest(CustomWebApplicationFactory webApplicationFactory) : base(webApplicationFactory)
     {
-        _httpClient = webApplicationFactory.CreateClient();
-        _email = webApplicationFactory.GetEmail();
-        _name = webApplicationFactory.GetName();
-        _password = webApplicationFactory.GetPassword();
+        _email = webApplicationFactory.UserTeamMember.GetEmail();
+        _name = webApplicationFactory.UserTeamMember.GetName();
+        _password = webApplicationFactory.UserTeamMember.GetPassword();
     }
 
     [Fact]
@@ -29,7 +26,7 @@ public class DoLoginTest : IClassFixture<CustomWebApplicationFactory>
             Password = _password
         };
 
-        var response = await _httpClient.PostAsJsonAsync(METHOD, request);
+        var response = await DoPost(METHOD, request);
 
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
 

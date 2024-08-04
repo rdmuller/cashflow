@@ -1,6 +1,6 @@
-﻿using CashFlow.Communication.Requests;
+﻿using CashFlow.Application.UseCases.Login.DoLogin;
+using CashFlow.Communication.Requests;
 using CashFlow.Communication.Responses;
-using CashFlow.Domain.Login;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CashFlow.API.Controllers;
