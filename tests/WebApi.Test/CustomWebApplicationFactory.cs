@@ -100,6 +100,11 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         var expense = ExpenseBuilder.Build(user);
         expense.Id = expenseId;
 
+        foreach (var tag in expense.Tags)
+        {
+            tag.ExpenseId = expenseId;
+        }
+
         dbContext.Expenses.Add(expense);
 
         return expense;
